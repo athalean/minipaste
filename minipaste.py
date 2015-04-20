@@ -1,6 +1,7 @@
 import os
 import re
 import random
+import json
 from flask import Flask, render_template, request, url_for, redirect
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name, get_all_lexers
@@ -10,6 +11,11 @@ from string import ascii_lowercase, digits
 
 app = Flask(__name__)
 
+# python 2 compat
+try:
+    FileNotFoundError
+except:
+    FileNotFoundError = IOError
 
 POPULAR_LANGS = ['python', 'php', 'js']
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -38,7 +44,7 @@ def showpaste(pasteid):
     metastring, remainder = re.match(r'<\?meta (.*?) \?>(.*)', content).groups()
     code = '\n'.join((remainder, '\n'.join(content.splitlines()[1:])))
 
-    meta = dict(elem.split("=") for elem in metastring.split(','))
+    meta = json.loads(metastring)
     lexer = get_lexer_by_name(meta.get('language', 'text'))
     highlighted_code = highlight(code, lexer, HtmlFormatter(cssclass="codehilite"))
 
@@ -55,15 +61,14 @@ def index():
         code = payload.pop('code')
         # fix windows lines issue
         code = '\n'.join(code.splitlines())
-        metadata = ','.join("{key}={value}".format(key=key, value=value)
-                            for key, value in payload.items() if value)
+        metadata = json.dumps(payload)
         pasteid = random_string()
 
         with open(os.path.join(PASTES_DIR, pasteid), 'w') as f:
             f.write("<?meta {metadata} ?>{code}".format(
                 code=code,
-                metadata=metadata)
-            )
+                metadata=metadata
+            ))
         return redirect(url_for('showpaste', pasteid=pasteid))
     return render_template('index.html', languages=lexers)
 

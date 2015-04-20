@@ -1,0 +1,15 @@
+{% extends "__base.html" %}
+
+{% block body %}
+    <h1>Poste Paste</h1>
+    <form method="post">
+        <textarea name="code" cols="80" rows="20"></textarea><br/>
+        Title (optional): <input type="text" name="title"/><br/>
+        Language: <select name="language">
+            {% for language in languages %}
+                <option value="{{ language }}">{{ language }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Submit"/>
+    </form>
+{% endblock %}
